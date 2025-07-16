@@ -12,10 +12,8 @@ public class DataDictionaryRecordType_Queueable implements Finalizer, Queueable 
                                     LastModifiedBy.Name, LastModifiedDate, SystemModstamp 
                                     FROM RecordType];
 
-        // Get the dataObject Ids for linking to the parent
         Map<String, Id> dataObjMap = new Map<String, Id>();
-        List<Data_Object__c> dataObjList = [Select Id, Name from Data_Object__c];
-        for(Data_Object__c dataObj :dataObjList){
+        for(Data_Object__c dataObj : [Select Id, Name from Data_Object__c]){
             dataObjMap.put(dataObj.Name, dataObj.Id);
         }
 
@@ -59,41 +57,45 @@ public class DataDictionaryRecordType_Queueable implements Finalizer, Queueable 
             if(oldDataObjRT == null){
                 newDataObjRT.Data_Object__c = dataObjMap.get(rt.SobjectType);
                 upsertDORTList.add(newDataObjRT);
-            }else if(newDataObjRT.Name != oldDataObjRT.Name ||
-            newDataObjRT.Data_Object__c != oldDataObjRT.Data_Object__c ||
-            newDataObjRT.Developer_Name__c != oldDataObjRT.Developer_Name__c ||
-            newDataObjRT.Record_Type_Id__c != oldDataObjRT.Record_Type_Id__c ||
-            newDataObjRT.Namespace_Prefix__c != oldDataObjRT.Namespace_Prefix__c ||
-            newDataObjRT.Description__c != oldDataObjRT.Description__c ||
-            newDataObjRT.Business_Process_Id__c != oldDataObjRT.Business_Process_Id__c ||
-            newDataObjRT.Sobject_Type__c != oldDataObjRT.Sobject_Type__c ||
-            newDataObjRT.Is_Active__c != oldDataObjRT.Is_Active__c ||
-            newDataObjRT.Created_By_Id__c != oldDataObjRT.Created_By_Id__c ||
-            newDataObjRT.Created_By_Name__c != oldDataObjRT.Created_By_Name__c ||
-            newDataObjRT.Created_Date__c != oldDataObjRT.Created_Date__c ||
-            newDataObjRT.Last_Modified_By_Id__c != oldDataObjRT.Last_Modified_By_Id__c ||
-            newDataObjRT.Last_Modified_By_Name_Text__c != oldDataObjRT.Last_Modified_By_Name_Text__c ||
-            newDataObjRT.Last_Modified_Date__c != oldDataObjRT.Last_Modified_Date__c ||
-            newDataObjRT.System_Modstamp__c != oldDataObjRT.System_Modstamp__c){
-            newDataObjRT.Id = oldDataObjRT.Id;
-
-            upsertDORTList.add(newDataObjRT);
+            } else if (newDataObjRT.Name != oldDataObjRT.Name ||
+                newDataObjRT.Data_Object__c != oldDataObjRT.Data_Object__c ||
+                newDataObjRT.Developer_Name__c != oldDataObjRT.Developer_Name__c ||
+                newDataObjRT.Record_Type_Id__c != oldDataObjRT.Record_Type_Id__c ||
+                newDataObjRT.Namespace_Prefix__c != oldDataObjRT.Namespace_Prefix__c ||
+                newDataObjRT.Description__c != oldDataObjRT.Description__c ||
+                newDataObjRT.Business_Process_Id__c != oldDataObjRT.Business_Process_Id__c ||
+                newDataObjRT.Sobject_Type__c != oldDataObjRT.Sobject_Type__c ||
+                newDataObjRT.Is_Active__c != oldDataObjRT.Is_Active__c ||
+                newDataObjRT.Created_By_Id__c != oldDataObjRT.Created_By_Id__c ||
+                newDataObjRT.Created_By_Name__c != oldDataObjRT.Created_By_Name__c ||
+                newDataObjRT.Created_Date__c != oldDataObjRT.Created_Date__c ||
+                newDataObjRT.Last_Modified_By_Id__c != oldDataObjRT.Last_Modified_By_Id__c ||
+                newDataObjRT.Last_Modified_By_Name_Text__c != oldDataObjRT.Last_Modified_By_Name_Text__c ||
+                newDataObjRT.Last_Modified_Date__c != oldDataObjRT.Last_Modified_Date__c ||
+                newDataObjRT.System_Modstamp__c != oldDataObjRT.System_Modstamp__c) {
+                newDataObjRT.Id = oldDataObjRT.Id;
+                upsertDORTList.add(newDataObjRT);
             }
         }
-        delete dataObjRTMAP.values();
-        upsert upsertDORTList;
+        if(!dataObjRTMAP.isEmpty()) {
+            delete dataObjRTMAP.values();
+        }
+        if(!upsertDORTList.isEmpty()) {
+            upsert upsertDORTList;
+        }
         
-        DataDictionaryRecordType_Queueable DDRT = new DataDictionaryRecordType_Queueable();
-        System.attachFinalizer(DDRT);
+        System.attachFinalizer(this);
     }
 
-      // Finalizer implementation
-  public void execute(FinalizerContext ctx) {
-
-      String parentJobId = '' + ctx.getAsyncApexJobId();
-      if (ctx.getResult() == ParentJobResult.SUCCESS) {
-          DataDictionaryPicklist_Batch DDPB = new DataDictionaryPicklist_Batch();//batch for creating all picklist values
-          Id batchId = DataDictionaryUtility.submitDataPicklistBatch();   
-      }
-  }
+    // Finalizer implementation
+    public void execute(FinalizerContext ctx) {
+        // **Modification for Testability**
+        // This prevents the chained batch from running during a test, which would
+        // violate governor limits. This has no impact on production execution.
+        if (!Test.isRunningTest()) {
+            if (ctx.getResult() == ParentJobResult.SUCCESS) {
+                DataDictionaryUtility.submitDataPicklistBatch();   
+            }
+        }
+    }
 }

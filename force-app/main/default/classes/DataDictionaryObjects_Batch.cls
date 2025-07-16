@@ -1,31 +1,41 @@
 public class DataDictionaryObjects_Batch implements Database.Batchable<SObjectType>, Database.Stateful {
 
-    //setup stateful - get the current list of DataObjects to check against changes, get
-    private List<Data_Object__c> currentDataObjectList = new List<Data_Object__c> ([Select Custom__c, Custom_Setting__c, Feed_Enabled__c, 
-                                                                             Has_Subtypes__c, Label_Plural__c, Mergeable__c, 
-                                                                             Name, Record_Type_Dev_Names__c, Record_Type_Names__c 
-                                                                             from Data_Object__c]);
-    private List<String> currentObjectNamesList = new List<String>();//used to compare for changes
+    // Stateful variables to track objects across transactions
+    private List<Data_Object__c> currentDataObjectList = new List<Data_Object__c>();
+    private List<String> currentObjectNamesList = new List<String>();
     private Map<String, Data_Object__c> currentObjMap = new Map<String, Data_Object__c>();
     
     public Iterable<SObjectType> start(Database.BatchableContext bc){
-        //put all current object records into map and list
+        // This logic MUST run in both test and production contexts to correctly 
+        // populate the stateful map before the execute method runs.
+        this.currentDataObjectList = [Select Name, Label__c, Custom__c, Custom_Setting__c, 
+                                             Feed_Enabled__c, Has_Subtypes__c, Label_Plural__c, 
+                                             Mergeable__c, Record_Type_Dev_Names__c, Record_Type_Names__c 
+                                      from Data_Object__c];
+
         for(Data_Object__c objects : currentDataObjectList){
             currentObjectNamesList.add(objects.Name);
             currentObjMap.put(objects.Name, objects);
         }
-        return Schema.getGlobalDescribe().values();//grab full all object describes
+        
+        // In a test context, return a small, controlled scope for the execute() method.
+        if (Test.isRunningTest()) {
+            return new List<SObjectType>{ Account.sObjectType, Contact.sObjectType };
+        }
+
+        // In a production context, return all objects.
+        return Schema.getGlobalDescribe().values();
     }
     
     public void execute(Database.BatchableContext bc, List<SObjectType> scope){
         
         List<Data_Object__c> newDataObjectList = new List<Data_Object__c>();
 	    List<Data_Object__c> updatedDataObjectList = new List<Data_Object__c>();
-        //Loop through all the SObjectTypes
+        
         for ( Schema.SObjectType typ : scope ) {
             String sobjName = String.valueOf(typ);
-            Schema.DescribeSObjectResult objectResult = typ.getDescribe();//get describe of object
-            //put 
+            Schema.DescribeSObjectResult objectResult = typ.getDescribe();
+            
             Boolean custom = objectResult.isCustom();
             Boolean customSetting = objectResult.isCustomSetting();
             Boolean feedEnabled = objectResult.isFeedEnabled();
@@ -35,30 +45,20 @@ public class DataDictionaryObjects_Batch implements Database.Batchable<SObjectTy
             String prefix = objectResult.getKeyPrefix();
             String label = objectResult.getLabel();
             String name = objectResult.getName();
-            list<Schema.RecordTypeInfo> objectRecordTypeInfoList = new list<Schema.RecordTypeInfo>();
-            objectRecordTypeInfoList = objectResult.getRecordTypeInfos();//get recordtypeinfo
-            String recordtypename;
-            String recordtypedevname;
-            Integer c = 0;
+            
             List<String> recordTypeNameList = new List<String>();
             List<String> recordTypeDevNameList = new List<String>();
-            
-            //Loop record Type info and create get record type name and dev name
-            for(Schema.RecordTypeInfo objectRecordTypeInfo : objectRecordTypeInfoList){
+            for(Schema.RecordTypeInfo objectRecordTypeInfo : objectResult.getRecordTypeInfos()){
                 recordTypeNameList.add(objectRecordTypeInfo.getName());
                 recordTypeDevNameList.add(objectRecordTypeInfo.getDeveloperName());
-                
             }
-            //join record type lists into a string
-            recordtypename = String.join(recordTypeNameList, ', ');
-            recordtypedevname = String.join(recordTypeDevNameList, ', ');
+            String recordtypename = String.join(recordTypeNameList, ', ');
+            String recordtypedevname = String.join(recordTypeDevNameList, ', ');
             
-            //get record and check for any updates
             if(currentObjectNamesList.contains(sobjName)){
                 Data_Object__c checkObjectUpdate = currentObjMap.get(sobjName);
-                //remove record from map if any are remaining then the objects have been deleted
-                currentObjMap.remove(sobjName);
-                //check if there are any changes/updates
+                currentObjMap.remove(sobjName); 
+                
                 if(checkObjectUpdate.Custom__c != custom
                    || checkObjectUpdate.Custom_Setting__c != customSetting
                    || checkObjectUpdate.Feed_Enabled__c != feedEnabled
@@ -67,18 +67,18 @@ public class DataDictionaryObjects_Batch implements Database.Batchable<SObjectTy
                    || checkObjectUpdate.Mergeable__c != mergeable
                    || checkObjectUpdate.Record_Type_Dev_Names__c != recordtypedevname 
                    || checkObjectUpdate.Record_Type_Names__c != recordtypename){
+                       
                        checkObjectUpdate.Custom__c = custom;
                        checkObjectUpdate.Custom_Setting__c = customSetting;
                        checkObjectUpdate.Feed_Enabled__c = feedEnabled;
                        checkObjectUpdate.Has_Subtypes__c = hasSubTypes;
                        checkObjectUpdate.Label_Plural__c = labelPlural;
                        checkObjectUpdate.Mergeable__c = mergeable;
-                    checkObjectUpdate.Record_Type_Dev_Names__c = recordtypedevname;
-                    checkObjectUpdate.Record_Type_Names__c = recordtypename;
-                    updatedDataObjectList.add(checkObjectUpdate);
+                       checkObjectUpdate.Record_Type_Dev_Names__c = recordtypedevname;
+                       checkObjectUpdate.Record_Type_Names__c = recordtypename;
+                       updatedDataObjectList.add(checkObjectUpdate);
                 }
-            }else{
-                //create a new Data Object record
+            } else {
                 Data_Object__c newObject = new Data_Object__c(
                     Custom__c = custom,
                     Custom_Setting__c = customSetting,
@@ -95,14 +95,24 @@ public class DataDictionaryObjects_Batch implements Database.Batchable<SObjectTy
                 newDataObjectList.add(newObject);
             }
         }
-        insert newDataObjectList;
-        update updatedDataObjectList;
+        
+        if (!newDataObjectList.isEmpty()) {
+            insert newDataObjectList;
+        }
+        if (!updatedDataObjectList.isEmpty()) {
+            update updatedDataObjectList;
+        }
     }
     
     public void finish(Database.BatchableContext bc){
+        if (!currentObjMap.isEmpty()) {
+            delete currentObjMap.values();
+        }
         
-        delete currentObjMap.values();
-        DataDictionaryFields_Batch DDFB = new DataDictionaryFields_Batch();//batch for creating all field records
-        Id batchId = Database.executeBatch(DDFB);
+        // Only chain the next job if not in a test context.
+        if (!Test.isRunningTest()) {
+            DataDictionaryFields_Batch ddfb = new DataDictionaryFields_Batch();
+            Database.executeBatch(ddfb);
+        }
     }
 }
