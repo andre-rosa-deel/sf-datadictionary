@@ -1,5 +1,8 @@
-global class DataDictionaryPicklist_Batch implements Database.Batchable<sObject>, Database.AllowsCallouts {
+global class DataDictionaryPicklist_Batch implements Database.Batchable<sObject>, Database.RaisesPlatformEvents, Database.AllowsCallouts, Database.Stateful {
+    private String originalTransactionId;
+
     global Iterable<sObject> start(Database.BatchableContext bc) {
+        this.originalTransactionId = Logger.getTransactionId();
         List<RecordType> RTList = [
             SELECT
                 Id,
@@ -18,10 +21,15 @@ global class DataDictionaryPicklist_Batch implements Database.Batchable<sObject>
             FROM RecordType
         ];
 
+        Logger.info('Starting DataDictionaryPicklist_Batch');
+        Logger.saveLog();
+
         return RTList;
     }
 
     global void execute(Database.BatchableContext bc, List<RecordType> scope) {
+        Logger.setParentLogTransactionId(this.originalTransactionId);
+
         //map for Getting DataObjectRecordType Id
         Map<Id, Id> dataObjRTMap = new Map<Id, Id>();
         for (Data_Object_Record_Type__c dataObjRT : [
@@ -123,13 +131,33 @@ global class DataDictionaryPicklist_Batch implements Database.Batchable<sObject>
                     }
                 }
             } catch (Exception e) {
+                Logger.exception('Exception Error Message.', e);
                 system.debug('Exception Error Message: ' + e.getMessage());
                 continue;
             }
         }
-        insert insertDFRTP;
-        delete currentDFRTPMap.values();
+
+        if (!insertDFRTP.isEmpty()) {
+            List<Database.SaveResult> result = Database.insert(
+                insertDFRTP,
+                false
+            );
+            Logger.info('Inserting Data Field Picklists', result);
+        }
+        if (!currentDFRTPMap.values().isEmpty()) {
+            List<Database.DeleteResult> result = Database.delete(
+                currentDFRTPMap.values(),
+                false
+            );
+            Logger.info('Deleting Data Field Picklists', result);
+        }
+
+        Logger.saveLog();
     }
     global void finish(Database.BatchableContext bc) {
+        Logger.setParentLogTransactionId(this.originalTransactionId);
+
+        Logger.info('Finishing running DataDictionaryPicklist_Batch');
+        Logger.saveLog();
     }
 }

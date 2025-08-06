@@ -1,5 +1,9 @@
-global class DataDictionaryFields_Batch implements Database.Batchable<SObjectType> {
+global class DataDictionaryFields_Batch implements Database.Batchable<SObjectType>, Database.RaisesPlatformEvents, Database.AllowsCallouts, Database.Stateful {
+    private String originalTransactionId;
+
     global Iterable<SObjectType> start(Database.BatchableContext bc) {
+        this.originalTransactionId = Logger.getTransactionId();
+
         // In a test context, only run for the Account object to avoid limit issues
         if (Test.isRunningTest()) {
             return new List<SObjectType>{ Account.sObjectType };
@@ -17,10 +21,15 @@ global class DataDictionaryFields_Batch implements Database.Batchable<SObjectTyp
                 scopeList.add(scopeObject);
             }
         }
+
+        Logger.info('Starting DataDictionaryFields_Batch');
+        Logger.saveLog();
+
         return scopeList;
     }
 
     global void execute(Database.BatchableContext bc, List<SObjectType> scope) {
+        Logger.setParentLogTransactionId(this.originalTransactionId);
         //create list and loop through to get the list of objects in scope
         List<String> scopeObjectsList = new List<String>();
         for (Schema.SObjectType objType : scope) {
@@ -238,20 +247,42 @@ global class DataDictionaryFields_Batch implements Database.Batchable<SObjectTyp
             }
         }
 
-        if (!addFieldList.isEmpty())
-            insert addFieldList;
-        if (!updateFieldList.isEmpty())
-            update updateFieldList;
+        if (!addFieldList.isEmpty()) {
+            List<Database.SaveResult> result = Database.insert(
+                addFieldList,
+                false
+            );
+            Logger.info('Inserting Data Fields', result);
+        }
+        if (!updateFieldList.isEmpty()) {
+            List<Database.SaveResult> result = Database.update(
+                updateFieldList,
+                false
+            );
+            Logger.info('Inserting Data Fields', result);
+        }
 
         // Any remaining records in the map are obsolete and should be soft-deleted
         for (Data_Field__c df : dataFieldsMap.values()) {
             df.Deleted__c = true;
         }
-        if (!dataFieldsMap.isEmpty())
-            update dataFieldsMap.values();
+        if (!dataFieldsMap.isEmpty()) {
+            List<Database.SaveResult> result = Database.update(
+                dataFieldsMap.values(),
+                false
+            );
+            Logger.info('Inserting Data Fields', result);
+        }
+
+        Logger.saveLog();
     }
 
     global void finish(Database.BatchableContext bc) {
+        Logger.setParentLogTransactionId(this.originalTransactionId);
+
+        Logger.info('Finishing running DataDictionaryFields_Batch');
+        Logger.saveLog();
+
         // **Modification for Testability**
         // By wrapping the chained job in this condition, we prevent it from running
         // during a test. This allows us to test this batch class in isolation

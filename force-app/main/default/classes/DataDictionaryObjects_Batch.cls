@@ -1,8 +1,9 @@
-public class DataDictionaryObjects_Batch implements Database.Batchable<SObjectType>, Database.Stateful {
+public class DataDictionaryObjects_Batch implements Database.Batchable<SObjectType>, Database.RaisesPlatformEvents, Database.AllowsCallouts, Database.Stateful {
     // Stateful variables to track objects across transactions
     private transient List<Data_Object__c> currentDataObjectList;
     private Map<String, Data_Object__c> currentObjMap = new Map<String, Data_Object__c>();
     private List<String> currentObjectNamesList = new List<String>();
+    private String originalTransactionId;
 
     // This new variable allows tests to specify a controlled scope for isolation.
     @TestVisible
@@ -31,6 +32,8 @@ public class DataDictionaryObjects_Batch implements Database.Batchable<SObjectTy
     }
 
     public Iterable<SObjectType> start(Database.BatchableContext bc) {
+        this.originalTransactionId = Logger.getTransactionId();
+
         if (Test.isRunningTest()) {
             // If the test method has defined a specific scope, use it.
             if (testScope != null && !testScope.isEmpty()) {
@@ -42,11 +45,16 @@ public class DataDictionaryObjects_Batch implements Database.Batchable<SObjectTy
                 Contact.sObjectType
             };
         }
+        Logger.info('Starting DataDictionaryObjects_Batch');
+        Logger.saveLog();
+
         // In production, return all objects.
         return Schema.getGlobalDescribe().values();
     }
 
     public void execute(Database.BatchableContext bc, List<SObjectType> scope) {
+        Logger.setParentLogTransactionId(this.originalTransactionId);
+
         List<Data_Object__c> newDataObjectList = new List<Data_Object__c>();
         List<Data_Object__c> updatedDataObjectList = new List<Data_Object__c>();
 
@@ -119,16 +127,35 @@ public class DataDictionaryObjects_Batch implements Database.Batchable<SObjectTy
             }
         }
 
-        if (!newDataObjectList.isEmpty())
-            insert newDataObjectList;
-        if (!updatedDataObjectList.isEmpty())
-            update updatedDataObjectList;
+        if (!newDataObjectList.isEmpty()) {
+            List<Database.SaveResult> result = Database.insert(
+                newDataObjectList,
+                false
+            );
+            Logger.info('Inserting Data Objects', result);
+        }
+        if (!updatedDataObjectList.isEmpty()) {
+            List<Database.SaveResult> result = Database.update(
+                updatedDataObjectList,
+                false
+            );
+            Logger.info('Updating Data Objects', result);
+        }
     }
 
     public void finish(Database.BatchableContext bc) {
+        Logger.setParentLogTransactionId(this.originalTransactionId);
+
         if (!currentObjMap.isEmpty()) {
-            delete currentObjMap.values();
+            List<Database.DeleteResult> result = Database.delete(
+                currentObjMap.values(),
+                false
+            );
+            Logger.info('Deleting Data Objects', result);
         }
+
+        Logger.info('Finishing running DataDictionaryObjects_Batch');
+        Logger.saveLog();
 
         if (!Test.isRunningTest()) {
             Database.executeBatch(new DataDictionaryFields_Batch());

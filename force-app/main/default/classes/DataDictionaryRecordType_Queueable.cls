@@ -1,4 +1,4 @@
-public class DataDictionaryRecordType_Queueable implements Finalizer, Queueable {
+public class DataDictionaryRecordType_Queueable implements Finalizer, Queueable, Database.RaisesPlatformEvents {
     public void execute(QueueableContext context) {
         Map<String, Data_Object_Record_Type__c> dataObjRTMAP = new Map<String, Data_Object_Record_Type__c>();
 
@@ -113,12 +113,20 @@ public class DataDictionaryRecordType_Queueable implements Finalizer, Queueable 
             }
         }
         if (!dataObjRTMAP.isEmpty()) {
-            delete dataObjRTMAP.values();
+            List<Database.DeleteResult> result = Database.delete(
+                dataObjRTMAP.values(),
+                false
+            );
+            Logger.info('Deleting Data Object Record Types', result);
         }
         if (!upsertDORTList.isEmpty()) {
-            upsert upsertDORTList;
+            List<Database.SaveResult> result = Database.upsert(
+                upsertDORTList,
+                false
+            );
+            Logger.info('Inserting Data Object Record Types', result);
         }
-
+        Logger.saveLog();
         System.attachFinalizer(this);
     }
 
