@@ -521,6 +521,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Integration_Service_Field__c.Create__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Integration_Service_Field__c.Data_Field__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -532,6 +537,21 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Integration_Service_Field__c.Data_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Integration_Service_Field__c.Delete__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Integration_Service_Field__c.Read__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Integration_Service_Field__c.Update__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
