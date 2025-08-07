@@ -22,11 +22,7 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
-                <field>Create__c</field>
-            </layoutItems>
-            <layoutItems>
-                <behavior>Edit</behavior>
-                <field>Update__c</field>
+                <field>Edit__c</field>
             </layoutItems>
         </layoutColumns>
         <layoutColumns>
@@ -45,10 +41,6 @@
             <layoutItems>
                 <behavior>Edit</behavior>
                 <field>Read__c</field>
-            </layoutItems>
-            <layoutItems>
-                <behavior>Edit</behavior>
-                <field>Delete__c</field>
             </layoutItems>
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
