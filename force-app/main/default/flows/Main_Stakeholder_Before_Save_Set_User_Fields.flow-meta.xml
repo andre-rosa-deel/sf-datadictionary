@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>64.0</apiVersion>
+    <formulas>
+        <name>FullName</name>
+        <dataType>String</dataType>
+        <expression>{!$Record.User__r.FirstName} &amp; &quot; &quot; &amp; {!$Record.User__r.LastName}</expression>
+    </formulas>
+    <interviewLabel>Main Stakeholder {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Main Stakeholder | Before Save | Set User Fields</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <name>Set_User_fields</name>
+        <label>Set User fields</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <inputAssignments>
+            <field>Email__c</field>
+            <value>
+                <elementReference>$Record.User__r.Email</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Full_Name__c</field>
+            <value>
+                <elementReference>FullName</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Set_User_fields</targetReference>
+        </connector>
+        <object>Main_Stakeholder__c</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

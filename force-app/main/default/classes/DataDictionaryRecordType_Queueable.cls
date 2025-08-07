@@ -113,20 +113,12 @@ public class DataDictionaryRecordType_Queueable implements Finalizer, Queueable,
             }
         }
         if (!dataObjRTMAP.isEmpty()) {
-            List<Database.DeleteResult> result = Database.delete(
-                dataObjRTMAP.values(),
-                false
-            );
-            Logger.info('Deleting Data Object Record Types', result);
+            delete dataObjRTMAP.values();
         }
         if (!upsertDORTList.isEmpty()) {
-            List<Database.SaveResult> result = Database.upsert(
-                upsertDORTList,
-                false
-            );
-            Logger.info('Inserting Data Object Record Types', result);
+            upsert upsertDORTList;
         }
-        Logger.saveLog();
+
         System.attachFinalizer(this);
     }
 
