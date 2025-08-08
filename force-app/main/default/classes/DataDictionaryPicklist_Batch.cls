@@ -131,7 +131,7 @@ global class DataDictionaryPicklist_Batch implements Database.Batchable<sObject>
                     }
                 }
             } catch (Exception e) {
-                Logger.exception('Exception Error Message.', e);
+                Logger.error('Exception Error Message.', e);
                 system.debug('Exception Error Message: ' + e.getMessage());
                 continue;
             }
