@@ -110,7 +110,8 @@ global class DataDictionaryFields_Batch implements Database.Batchable<SObjectTyp
                 Id_Lookup__c,
                 Custom__c,
                 Dependent_Picklist__c,
-                Deleted__c
+                Deleted__c,
+                Field_Id__c
             FROM Data_Field__c
             WHERE
                 Data_Object__r.Name IN :scopeObjectsList

@@ -79,8 +79,8 @@
                 <field>Picklist_Values__c</field>
             </layoutItems>
             <layoutItems>
-                <behavior>Edit</behavior>
-                <field>Unique_Key__c</field>
+                <behavior>Readonly</behavior>
+                <field>Field_Id__c</field>
             </layoutItems>
         </layoutColumns>
         <layoutColumns>
@@ -119,6 +119,10 @@
             <layoutItems>
                 <behavior>Edit</behavior>
                 <field>Calculated_Formula__c</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>Unique_Key__c</field>
             </layoutItems>
         </layoutColumns>
         <style>TwoColumnsTopToBottom</style>
@@ -394,7 +398,17 @@
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
+        <fields>Integration_Service__c</fields>
+        <fields>Data_Type__c</fields>
+        <fields>Data_Length__c</fields>
+        <fields>Master__c</fields>
+        <fields>Read__c</fields>
+        <fields>Edit__c</fields>
         <relatedList>Integration_Service_Field__c.Data_Field__c</relatedList>
+    </relatedLists>
+    <relatedLists>
+        <fields>NAME</fields>
+        <relatedList>Metadata_Component_Reference__c.Data_Field__c</relatedList>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>
