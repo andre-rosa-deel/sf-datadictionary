@@ -3,7 +3,6 @@
     <excludeButtons>ChangeOwnerOne</excludeButtons>
     <excludeButtons>ChangeRecordType</excludeButtons>
     <excludeButtons>Clone</excludeButtons>
-    <excludeButtons>OpenSlackRecordChannel</excludeButtons>
     <excludeButtons>Submit</excludeButtons>
     <layoutSections>
         <customLabel>true</customLabel>
@@ -408,6 +407,10 @@
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
+        <fields>Component_Name__c</fields>
+        <fields>Component_Type__c</fields>
+        <fields>Component_Id__c</fields>
+        <fields>Component_Namespace__c</fields>
         <relatedList>Metadata_Component_Reference__c.Data_Field__c</relatedList>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
