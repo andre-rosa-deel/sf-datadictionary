@@ -1,6 +1,7 @@
 import { LightningElement } from "lwc";
 import submitDataObjectBatch from "@salesforce/apex/DataDictionaryUtility.submitDataObjectBatch";
 import submitDataPicklistBatch from "@salesforce/apex/DataDictionaryUtility.submitDataPicklistBatch";
+import submitMetadataReferencesBatch from "@salesforce/apex/DataDictionaryUtility.submitMetadataReferencesBatch";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 export default class DataDictionaryUtility extends LightningElement {
@@ -10,6 +11,8 @@ export default class DataDictionaryUtility extends LightningElement {
     oldObjectId; //used to track old batch id
     newPicklistId; //used to track if a new batch id is created
     oldPicklistId; //used to track old batch id
+    newReferenceId; //used to track if a new batch id is created
+    oldReferenceId; //used to track old batch id
 
     handleDataObjectClick() {
         submitDataObjectBatch()
@@ -46,6 +49,30 @@ export default class DataDictionaryUtility extends LightningElement {
                 } else {
                     this.toast.message =
                         "Data Picklist Batch has not started try again in a little while or refresh the page";
+                    this.toast.variant = "warning";
+                    this.showToast(this.toast);
+                }
+            })
+            .catch((error) => {
+                this.toast.message = `An error occured: ${error}`;
+                this.toast.variant = "error";
+                this.showToast(this.toast);
+            });
+    }
+
+    handleMetadataReferenceClick() {
+        submitMetadataReferencesBatch()
+            .then((result) => {
+                this.newReferenceId = result;
+                if (this.newReferenceId != this.oldReferenceId) {
+                    this.oldReferenceId = result;
+                    this.toast.message =
+                        "Metadata References Batch has started";
+                    this.toast.variant = "success";
+                    this.showToast(this.toast);
+                } else {
+                    this.toast.message =
+                        "Metadata References Batch has not started try again in a little while or refresh the page";
                     this.toast.variant = "warning";
                     this.showToast(this.toast);
                 }

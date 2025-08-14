@@ -48,8 +48,6 @@
     <navType>Standard</navType>
     <tabs>Data_Object__c</tabs>
     <tabs>Data_Field__c</tabs>
-    <tabs>Data_Object_Record_Type__c</tabs>
-    <tabs>Data_Field_Record_Type_Picklist__c</tabs>
     <tabs>Integration_Service__c</tabs>
     <tabs>Integration_Service_Object__c</tabs>
     <tabs>Integration_Service_Field__c</tabs>

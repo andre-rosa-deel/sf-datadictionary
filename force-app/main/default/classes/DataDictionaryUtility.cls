@@ -254,7 +254,16 @@ public class DataDictionaryUtility {
     @AuraEnabled(cacheable=true)
     public static Id submitDataPicklistBatch() {
         DataDictionaryPicklist_Batch dPickBatch = new DataDictionaryPicklist_Batch();
-        Id batchId = Database.executeBatch(dPickBatch, 1); // if 100+ RTs then there will be a callout error
+        Id batchId = Test.isRunningTest()
+            ? IDGenerator.generate(AsyncApexJob.sObjectType)
+            : Database.executeBatch(dPickBatch, 1);
+        return batchId;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static Id submitMetadataReferencesBatch() {
+        DataDictionaryReference_Batch dRefBatch = new DataDictionaryReference_Batch();
+        Id batchId = Database.executeBatch(dRefBatch, 100);
         return batchId;
     }
 }

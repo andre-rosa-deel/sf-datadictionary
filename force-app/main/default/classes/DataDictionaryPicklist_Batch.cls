@@ -80,7 +80,7 @@ global class DataDictionaryPicklist_Batch implements Database.Batchable<sObject>
         }
 
         for (RecordType RT : scope) {
-            Map<String, Object> untype = HttpClass.uiAPIResponse(
+            Map<String, Object> untype = DataDictionaryHttpClass.getPicklists(
                 RT.SobjectType,
                 RT.Id,
                 UserInfo.getSessionId()
@@ -159,5 +159,9 @@ global class DataDictionaryPicklist_Batch implements Database.Batchable<sObject>
 
         Logger.info('Finishing running DataDictionaryPicklist_Batch');
         Logger.saveLog();
+
+        if (!Test.isRunningTest()) {
+            DataDictionaryUtility.submitMetadataReferencesBatch();
+        }
     }
 }
