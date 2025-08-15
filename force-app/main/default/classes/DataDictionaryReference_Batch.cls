@@ -39,6 +39,7 @@ global class DataDictionaryReference_Batch implements Database.Batchable<sObject
                 Data_Field__c,
                 Data_Field__r.Field_Id__c
             FROM Metadata_Component_Reference__c
+            WHERE Data_Field__c IN :scope
         ];
         Map<String, Metadata_Component_Reference__c> existingReferencesMap = new Map<String, Metadata_Component_Reference__c>();
         for (Metadata_Component_Reference__c mc : existingReferences) {
