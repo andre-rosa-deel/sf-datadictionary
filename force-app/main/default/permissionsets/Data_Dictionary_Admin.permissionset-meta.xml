@@ -145,11 +145,6 @@
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
-        <editable>false</editable>
-        <field>Data_Field__c.Field_Id__c</field>
-        <readable>false</readable>
-    </fieldPermissions>
-    <fieldPermissions>
         <editable>true</editable>
         <field>Data_Field__c.Filterable__c</field>
         <readable>true</readable>
@@ -293,11 +288,6 @@
         <editable>true</editable>
         <field>Data_Field__c.Notes__c</field>
         <readable>true</readable>
-    </fieldPermissions>
-    <fieldPermissions>
-        <editable>false</editable>
-        <field>Data_Field__c.Object_Manager__c</field>
-        <readable>false</readable>
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
@@ -677,6 +667,11 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Metadata_Component_Reference__c.Component_Type__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Metadata_Component_Reference__c.External_Id__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
